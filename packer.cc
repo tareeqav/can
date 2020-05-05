@@ -33,14 +33,12 @@ uint64_t CANPacker::set_value(uint64_t ret, Signal sig, int64_t ival){
   uint64_t mask = ((1ULL << sig.b2)-1) << shift;
   uint64_t dat = (ival & ((1ULL << sig.b2)-1)) << shift;
 
-  // if (sig.is_little_endian) {
-  //   dat = ReverseBytes(dat);
-  //   mask = ReverseBytes(mask);
-  // }
+  if (sig.is_little_endian) {
+    dat = ReverseBytes(dat);
+    mask = ReverseBytes(mask);
+  }
 
-  std::cout << "------------- " << std::hex << ret << " before mask" << std::endl;
   ret &= ~mask;
-  std::cout << "------------- " << std::hex << ret << " before dat" << std::endl;
   ret |= dat;
   return ret;
 }
@@ -48,8 +46,6 @@ uint64_t CANPacker::set_value(uint64_t ret, Signal sig, int64_t ival){
 CANPacker::CANPacker(const std::string& dbc_name) {
   dbc = dbc_lookup(dbc_name);
   assert(dbc);
-
-  std::cout << "num messages " << dbc->num_msgs << std::endl;
   for (int i=0; i<dbc->num_msgs; i++) {
     const Msg* msg = &dbc->msgs[i];
     message_lookup[msg->address] = *msg;
@@ -60,13 +56,6 @@ CANPacker::CANPacker(const std::string& dbc_name) {
   }
   init_crc_lookup_tables();
 
-  /*
-  num_msgs = self.dbc[0].num_msgs
-    for i in range(num_msgs):
-      msg = self.dbc[0].msgs[i]
-      self.name_to_address_and_size[string(msg.name)] = (msg.address, msg.size)
-      self.address_to_size[msg.address] = msg.size
-  */
   size_t num_msgs = dbc[0].num_msgs;
   for (size_t i=0; i < num_msgs; i++)
   {
@@ -74,7 +63,7 @@ CANPacker::CANPacker(const std::string& dbc_name) {
     name_to_address_and_size[msg.name] = std::make_pair(msg.address, msg.size);
     address_to_size[msg.address] = msg.size;
   }
-  std::cout << "ok" << std::endl;
+
 }
 
 uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &signals, int counter) {
@@ -82,7 +71,6 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
 
   for (const auto& sigval : signals) {
     std::string name = std::string(sigval.name);
-    std::cout << "sigval name " << sigval.name << std::endl;
     double value = sigval.value;
 
     auto sig_it = signal_lookup.find(std::make_pair(address, name));
@@ -97,10 +85,7 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
       ival = (1ULL << sig.b2) + ival;
     }
 
-    std::cout << "before set value ret == " << ret << std::endl;
-
     ret = set_value(ret, sig, ival);
-    std::cout << ">>>>> after set value ret == " << ret << std::endl;
   }
 
   if (counter >= 0){
@@ -120,7 +105,6 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
 
   auto sig_it_checksum = signal_lookup.find(std::make_pair(address, "CHECKSUM"));
   if (sig_it_checksum != signal_lookup.end()) {
-    std::cout << ".................................................." << std::endl;
     auto sig = sig_it_checksum->second;
     unsigned int chksm = toyota_checksum(address, ret, message_lookup[address].size);
     ret = set_value(ret, sig, chksm);
@@ -146,34 +130,8 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
 
 // }
 
-CANPacker::can_msg CANPacker::create_steer_command(double steer_torque_cmd, double steer_request_on, double counter)
+CANPacker::can_pack CANPacker::create_steer_command(double steer_torque_cmd, double steer_request_on, double counter)
 {
-  /*
-  cdef vector[SignalPackValue] values_thing
-    cdef SignalPackValue spv
-
-    names = []
-
-    for name, value in values.iteritems():
-      n = name.encode('utf8')
-      names.append(n) # TODO: find better way to keep reference to temp string arround
-
-      spv.name = n
-      spv.value = value
-      values_thing.push_back(spv)
-
-    return self.packer.pack(addr, values_thing, counter)
-
-    values = {
-    "STEER_REQUEST": steer_req,
-    "STEER_TORQUE_CMD": steer,
-    "COUNTER": raw_cnt,
-    "SET_ME_1": 1,
-  }
-
-
-  */
-
   std::string name("STEERING_LKA");
   std::string steer_request("STEER_REQUEST");
   std::string steer_torque("STEER_TORQUE_CMD");
@@ -183,7 +141,6 @@ CANPacker::can_msg CANPacker::create_steer_command(double steer_torque_cmd, doub
   std::vector<SignalPackValue> signals;
 
   SignalPackValue counter_spv;
-  // counter_spv.name = std::string("COUNTER").c_str();
   counter_spv.name = new char[counter_str.length()+1];
   std::strcpy((char *) counter_spv.name, counter_str.c_str());
   counter_spv.value = steer_request_on;
@@ -196,14 +153,12 @@ CANPacker::can_msg CANPacker::create_steer_command(double steer_torque_cmd, doub
   signals.push_back(steer_request_on_spv);
 
   SignalPackValue setme_1_spv;
-  // setme_1_spv.name = std::string("SET_ME_1").c_str();
   setme_1_spv.name = new char[setme_1.length()+1];
   std::strcpy((char *)setme_1_spv.name, setme_1.c_str());
   setme_1_spv.value = 1.0;
   signals.push_back(setme_1_spv);
 
   SignalPackValue steer_torque_cmd_spv;
-  // steer_torque_cmd_spv.name = std::string("STEER_TORQUE_CMD").c_str();
   steer_torque_cmd_spv.name = new char[steer_torque.length()+1];
   std::strcpy((char *) steer_torque_cmd_spv.name, steer_torque.c_str());
   steer_torque_cmd_spv.value = steer_torque_cmd;
@@ -212,68 +167,35 @@ CANPacker::can_msg CANPacker::create_steer_command(double steer_torque_cmd, doub
   std::pair<int, int> address_and_size = name_to_address_and_size[name];
 
   uint64_t val = pack(address_and_size.first, signals, -1);
-
-  std::cout << "WTFWTFWTFWTFWTFWTFWTFWTFWTF val is " << val << std::endl;
-
-
-  unsigned char uc_num3 = 65;
-  std::cout << uc_num3 << std::endl;
-
-  unsigned char b8[sizeof(uint64_t)] = {1};
-  std::cout << "now printing empty array " << std::endl;
-  for (int i =0; i < sizeof(uint64_t); i++)
-  {
-    std::cout <<  i << " counter has value " << b8[i] << std::endl;
-    b8[i] = (unsigned char)i;
-    std::cout <<  i << " NOW counter has value " << std::hex << +b8[i] << std::endl;
+  uint64_t tmp = val;
+  std::cout << std::hex;
+  std::cout << "generated value " << tmp << " and as an array is:" << std::endl;
+  for (int i=0; i < address_and_size.second; i++) {
+    std::cout << +(*(((uint8_t*)&val)+i)) << " " ;
   }
-  
-  // u64_to_eight_bytes(val);
-  // std::cout << "??????  msg is " << std::hex << val_.u64 << std::endl;
+  std::cout << std::endl;
+  can_pack msg;
+  msg.data = new uint8_t[address_and_size.second];
+  std::memcpy(msg.data, &val, address_and_size.second);
 
-  // std::stringstream ss;
-  // ss << val;
-  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-  // printf ( "% PRIu64 ", val) ;
-  // std::cout << ">>> string val is " << ss.str() << std::endl;
-
-  can_msg msg;
-  // std::cout << ">>> <<< >>  >>>  BEFORE copy " << msg.val << std::endl;;
-  std::memcpy(b8, &val, sizeof(uint64_t));
-
-  std::cout << "printing the value in the array >>>>>>>>>>> the size of val is " << sizeof(val) << std::endl;
-  for (int i =0; i < sizeof(uint64_t); i++)
-  {
-    std::cout <<  i << " counter has value " << +b8[i] << std::endl;
-  }
-
-  std::cout << std::endl << "now what??" << std::endl;
-  
-  // msg.address = address_and_size.first;
-  // msg.val = new char[address_and_size.second];
-  // // std::memcpy(msg.val, &val, address_and_size.second);
-  // char* p = (char *)&val;
-  // char t[address_and_size.second];
-  // std::memcpy(&t, p, address_and_size.second);
-  std::cout << ">>> <<< >>  >>>  msg is " << (void*) msg.val << std::endl;;
-  // msg.size = address_and_size.second;
-  // msg.bus = 0;
+  msg.size = address_and_size.second;
+  msg.bus = 0;
 
   return msg;
 }
 
-void CANPacker::u64_to_eight_bytes(const uint64_t input )
-{
-  #ifdef __x86_64__
-    const uint64_t res = (uint64_t)GUINT64_TO_BE((guint64)input);
-  #else
-    const uint64_t res = (uint64_t)GUINT64_TO_LE((guint64)input);
-  #endif
+// void CANPacker::u64_to_eight_bytes(const uint64_t input )
+// {
+//   #ifdef __x86_64__
+//     const uint64_t res = (uint64_t)GUINT64_TO_BE((guint64)input);
+//   #else
+//     const uint64_t res = (uint64_t)GUINT64_TO_LE((guint64)input);
+//   #endif
 
-  memcpy(&val_.u64, &input, sizeof(input));
-  memcpy( &val_.b8, &res, sizeof(res));
-  // return result;
-}
+//   memcpy(&val_.u64, &input, sizeof(input));
+//   memcpy( &val_.b8, &res, sizeof(res));
+//   // return result;
+// }
 
   }
 }

@@ -11,9 +11,7 @@ std::vector<const DBC*>& get_dbcs() {
 }
 
 const DBC* dbc_lookup(const std::string& dbc_name) {
-  std::cout << "in dbc lookup with dbc_name " << dbc_name << std::endl;
   for (const auto& dbci : get_dbcs()) {
-    std::cout << "got dbci " << dbci << std::endl;
     if (dbc_name == dbci->name) {
       return dbci;
     }
