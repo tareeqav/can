@@ -7,7 +7,7 @@
 #include <cstring>
 #include <memory>
 #include <sstream>
-#include <glib.h>
+
 
 #include "packer.h"
 
@@ -113,60 +113,28 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
   return ret;
 }
 
-// CANPacker::can_msg* CANPacker::make_can_msg(uint32_t address, const std::vector<SignalPackValue> &signals, int counter)
-// {
-//   /*
-//   cdef int addr, size
-//     if type(name_or_addr) == int:
-//       addr = name_or_addr
-//       size = self.address_to_size[name_or_addr]
-//     else:
-//       addr, size = self.name_to_address_and_size[name_or_addr.encode('utf8')]
-//     cdef uint64_t val = self.pack(addr, values, counter)
-//     val = self.ReverseBytes(val)
-//     return [addr, 0, (<char *>&val)[:size], bus]
-//   */
-//   uint64_t val = pack(address, signals, counter);
-
-// }
-
-CANPacker::can_pack CANPacker::create_steer_command(
-  double steer_torque_cmd, 
-  double steer_request_on,
-  double counter
-)
+CANPacker::can_pack CANPacker::make_can_msg(std::string &name, std::map<std::string, double> &values, int counter)
 {
-  std::string name("STEERING_LKA");
-  std::string steer_request("STEER_REQUEST");
-  std::string steer_torque("STEER_TORQUE_CMD");
-  std::string setme_1("SET_ME_1");
-  std::string counter_str("COUNTER");
 
   std::vector<SignalPackValue> signals;
 
-  SignalPackValue counter_spv;
-  counter_spv.name = new char[counter_str.length()+1];
-  std::strcpy((char *) counter_spv.name, counter_str.c_str());
-  counter_spv.value = counter;
-  signals.push_back(counter_spv);
+  std::map<std::string, double>::iterator it = values.begin();
+  while (it != values.end())
+  {
+    SignalPackValue signal;
 
-  SignalPackValue steer_request_on_spv;
-  steer_request_on_spv.name = new char[steer_request.length()+1];
-  std::strcpy((char *)steer_request_on_spv.name, steer_request.c_str());
-  steer_request_on_spv.value = steer_request_on;
-  signals.push_back(steer_request_on_spv);
+    std::string key = it->first;
+    double value = it->second;
+    
+    signal.name = new char[key.length()+1];
+    std::strcpy((char *)signal.name, key.c_str());
+    signal.value = value;
 
-  SignalPackValue setme_1_spv;
-  setme_1_spv.name = new char[setme_1.length()+1];
-  std::strcpy((char *)setme_1_spv.name, setme_1.c_str());
-  setme_1_spv.value = 1;
-  signals.push_back(setme_1_spv);
+    //add to list
+    signals.push_back(signal);
 
-  SignalPackValue steer_torque_cmd_spv;
-  steer_torque_cmd_spv.name = new char[steer_torque.length()+1];
-  std::strcpy((char *) steer_torque_cmd_spv.name, steer_torque.c_str());
-  steer_torque_cmd_spv.value = steer_torque_cmd;
-  signals.push_back(steer_torque_cmd_spv);
+    it++;
+  }
 
   std::pair<int, int> address_and_size = name_to_address_and_size[name];
 
@@ -189,20 +157,26 @@ CANPacker::can_pack CANPacker::create_steer_command(
   msg.bus = 0;
 
   return msg;
+
 }
 
-// void CANPacker::u64_to_eight_bytes(const uint64_t input )
-// {
-//   #ifdef __x86_64__
-//     const uint64_t res = (uint64_t)GUINT64_TO_BE((guint64)input);
-//   #else
-//     const uint64_t res = (uint64_t)GUINT64_TO_LE((guint64)input);
-//   #endif
+CANPacker::can_pack CANPacker::create_steer_command(
+  double steer_torque_value, 
+  double steer_request_on_off,
+  double counter
+)
+{
+  std::string name("STEERING_LKA");
 
-//   memcpy(&val_.u64, &input, sizeof(input));
-//   memcpy( &val_.b8, &res, sizeof(res));
-//   // return result;
-// }
+  std::map<std::string, double> values = {
+    {"STEER_REQUEST" , steer_request_on_off},
+    {"STEER_TORQUE_CMD" , steer_torque_value},
+    {"SET_ME_1" , 1.0},
+    {"COUNTER" , counter},
+  };
 
-  }
+  return make_can_msg(name, values, counter);
 }
+
+  } // namespace can
+} // namespace tareeq
