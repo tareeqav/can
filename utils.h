@@ -1,3 +1,5 @@
+#pragma once
+
 #include <map>
 #include <iostream>
 #include <algorithm>
@@ -23,29 +25,18 @@ double clip(double x, double lo, double hi)
     return std::max(lo, std::min(hi, x));
 }
 
-
-class CppPacker
-{
-public:
-    CppPacker()
-    {
-        packer = new CANPacker(std::string("toyota_corolla_2017_pt_generated"));
-        dbc = dbc_lookup(std::string("toyota_corolla_2017_pt_generated"));
-
-        size_t num_msgs = dbc[0].num_msgs;
-
-        for (int i=0; i < num_msgs; i++)
-        {
-            const Msg msg = dbc[0].msgs[i];
-        }
-    }
-
-private:
-    CANPacker *packer;
-    const DBC *dbc;
-    std::map<std::string, std::tuple<int, int>> name_to_address_and_size;
-    std::map<int, int> address_to_size;
-};
-
     } // namespace can
 } // namespace tareeq
+
+/*
+def create_steer_command(packer, steer, steer_req, raw_cnt):
+  """Creates a CAN message for the Toyota Steer Command."""
+
+  values = {
+    "STEER_REQUEST": steer_req,
+    "STEER_TORQUE_CMD": steer,
+    "COUNTER": raw_cnt,
+    "SET_ME_1": 1,
+  }
+  return packer.make_can_msg("STEERING_LKA", 2, values)
+*/
