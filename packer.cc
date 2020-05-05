@@ -130,7 +130,11 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
 
 // }
 
-CANPacker::can_pack CANPacker::create_steer_command(double steer_torque_cmd, double steer_request_on, double counter)
+CANPacker::can_pack CANPacker::create_steer_command(
+  double steer_torque_cmd, 
+  double steer_request_on,
+  double counter
+)
 {
   std::string name("STEERING_LKA");
   std::string steer_request("STEER_REQUEST");
@@ -143,7 +147,7 @@ CANPacker::can_pack CANPacker::create_steer_command(double steer_torque_cmd, dou
   SignalPackValue counter_spv;
   counter_spv.name = new char[counter_str.length()+1];
   std::strcpy((char *) counter_spv.name, counter_str.c_str());
-  counter_spv.value = steer_request_on;
+  counter_spv.value = counter;
   signals.push_back(counter_spv);
 
   SignalPackValue steer_request_on_spv;
@@ -155,7 +159,7 @@ CANPacker::can_pack CANPacker::create_steer_command(double steer_torque_cmd, dou
   SignalPackValue setme_1_spv;
   setme_1_spv.name = new char[setme_1.length()+1];
   std::strcpy((char *)setme_1_spv.name, setme_1.c_str());
-  setme_1_spv.value = 1.0;
+  setme_1_spv.value = 1;
   signals.push_back(setme_1_spv);
 
   SignalPackValue steer_torque_cmd_spv;
@@ -167,12 +171,15 @@ CANPacker::can_pack CANPacker::create_steer_command(double steer_torque_cmd, dou
   std::pair<int, int> address_and_size = name_to_address_and_size[name];
 
   uint64_t val = pack(address_and_size.first, signals, -1);
-  uint64_t tmp = val;
+  std::cout << "generated value " << val << " and as an array is:" << std::endl;
+  val = ReverseBytes(val);
+
   std::cout << std::hex;
-  std::cout << "generated value " << tmp << " and as an array is:" << std::endl;
+  std::cout << "reversed bytes value " << val << " and as an array is:" << std::endl;
   for (int i=0; i < address_and_size.second; i++) {
     std::cout << +(*(((uint8_t*)&val)+i)) << " " ;
   }
+
   std::cout << std::endl;
   can_pack msg;
   msg.data = new uint8_t[address_and_size.second];
