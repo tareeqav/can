@@ -1,14 +1,3 @@
-#include <cassert>
-#include <utility>
-#include <algorithm>
-#include <map>
-#include <cmath>
-#include <iostream>
-#include <cstring>
-#include <memory>
-#include <sstream>
-
-
 #include "packer.h"
 
 #define WARN printf
@@ -17,16 +6,16 @@ namespace tareeq {
   namespace can {
 
 // this is the same as read_u64_le, but uses uint64_t as in/out
-uint64_t CANPacker::ReverseBytes(uint64_t x) {
-  return ((x & 0xff00000000000000ull) >> 56) |
-          ((x & 0x00ff000000000000ull) >> 40) |
-          ((x & 0x0000ff0000000000ull) >> 24) |
-          ((x & 0x000000ff00000000ull) >> 8) |
-          ((x & 0x00000000ff000000ull) << 8) |
-          ((x & 0x0000000000ff0000ull) << 24) |
-          ((x & 0x000000000000ff00ull) << 40) |
-          ((x & 0x00000000000000ffull) << 56);
-}
+// uint64_t CANPacker::ReverseBytes(uint64_t x) {
+//   return ((x & 0xff00000000000000ull) >> 56) |
+//           ((x & 0x00ff000000000000ull) >> 40) |
+//           ((x & 0x0000ff0000000000ull) >> 24) |
+//           ((x & 0x000000ff00000000ull) >> 8) |
+//           ((x & 0x00000000ff000000ull) << 8) |
+//           ((x & 0x0000000000ff0000ull) << 24) |
+//           ((x & 0x000000000000ff00ull) << 40) |
+//           ((x & 0x00000000000000ffull) << 56);
+// }
 
 uint64_t CANPacker::set_value(uint64_t ret, Signal sig, int64_t ival){
   int shift = sig.is_little_endian? sig.b1 : sig.bo;
@@ -43,28 +32,30 @@ uint64_t CANPacker::set_value(uint64_t ret, Signal sig, int64_t ival){
   return ret;
 }
 
-CANPacker::CANPacker(const std::string& dbc_name) {
-  dbc = dbc_lookup(dbc_name);
-  assert(dbc);
-  for (int i=0; i<dbc->num_msgs; i++) {
-    const Msg* msg = &dbc->msgs[i];
-    message_lookup[msg->address] = *msg;
-    for (int j=0; j<msg->num_sigs; j++) {
-      const Signal* sig = &msg->sigs[j];
-      signal_lookup[std::make_pair(msg->address, std::string(sig->name))] = *sig;
-    }
-  }
-  init_crc_lookup_tables();
+CANPacker::CANPacker(const std::string& dbc_name) : CANBase(dbc_name){};
 
-  size_t num_msgs = dbc[0].num_msgs;
-  for (size_t i=0; i < num_msgs; i++)
-  {
-    Msg msg = dbc[0].msgs[i];
-    name_to_address_and_size[msg.name] = std::make_pair(msg.address, msg.size);
-    address_to_size[msg.address] = msg.size;
-  }
+// CANPacker::CANPacker(const std::string& dbc_name) {
+  // dbc = dbc_lookup(dbc_name);
+  // assert(dbc);
+  // for (int i=0; i<dbc->num_msgs; i++) {
+  //   const Msg* msg = &dbc->msgs[i];
+  //   message_lookup[msg->address] = *msg;
+  //   for (int j=0; j<msg->num_sigs; j++) {
+  //     const Signal* sig = &msg->sigs[j];
+  //     signal_lookup[std::make_pair(msg->address, std::string(sig->name))] = *sig;
+  //   }
+  // }
+  // init_crc_lookup_tables();
 
-}
+  // size_t num_msgs = dbc[0].num_msgs;
+  // for (size_t i=0; i < num_msgs; i++)
+  // {
+  //   Msg msg = dbc[0].msgs[i];
+  //   name_to_address_and_size[msg.name] = std::make_pair(msg.address, msg.size);
+  //   address_to_size[msg.address] = msg.size;
+  // }
+
+// }
 
 uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &signals, int counter) {
   uint64_t ret = 0;
@@ -113,7 +104,7 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
   return ret;
 }
 
-CANPacker::can_message CANPacker::make_can_msg(
+tareeq::can::can_message CANPacker::make_can_msg(
   std::string &name,
   std::map<std::string, double> &values,
   int counter
@@ -167,7 +158,47 @@ CANPacker::can_message CANPacker::make_can_msg(
 
 }
 
-CANPacker::can_message CANPacker::create_steer_command(
+/**
+def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead):
+  # TODO: find the exact canceling bit that does not create a chime
+  values = {
+    "ACCEL_CMD": accel,
+    "SET_ME_X01": 1,
+    "DISTANCE": 0,
+    "MINI_CAR": lead,
+    "SET_ME_X3": 3,
+    "SET_ME_1": 1,
+    "RELEASE_STANDSTILL": not standstill_req,
+    "CANCEL_REQ": pcm_cancel,
+  }
+  return packer.make_can_msg("ACC_CONTROL", 2, values)
+
+*/
+
+tareeq::can::can_message CANPacker::create_accel_command(
+  double accel_value, 
+  double pcm_cancel,
+  double standstill_req,
+  double lead
+)
+{
+  std::string name("ACC_CONTROL");
+
+  std::map<std::string, double> values = {
+    {"ACCEL_CMD", accel_value},
+    {"SET_ME_X01", 1},
+    {"DISTANCE", 0},
+    {"MINI_CAR", lead},
+    {"SET_ME_X3", 3},
+    {"SET_ME_1", 1},
+    {"RELEASE_STANDSTILL", not standstill_req},
+    {"CANCEL_REQ", pcm_cancel}
+  };
+
+  return make_can_msg(name, values, -1);
+}
+
+tareeq::can::can_message CANPacker::create_steer_command(
   double steer_torque_value, 
   double steer_request_on_off,
   double counter
@@ -185,5 +216,30 @@ CANPacker::can_message CANPacker::create_steer_command(
   return make_can_msg(name, values, (int) counter);
 }
 
+/**
+ * def create_gas_command(packer, gas_amount, idx):
+    # Common gas pedal msg generator
+    enable = gas_amount > 0.001
+
+    values = {
+        "ENABLE": enable,
+        "COUNTER_PEDAL": idx & 0xF,
+    }
+
+    if enable:
+        values["GAS_COMMAND"] = gas_amount * 255.
+        values["GAS_COMMAND2"] = gas_amount * 255.
+
+    dat = packer.make_can_msg("GAS_COMMAND", 2, values)[2]
+
+    checksum = crc8_pedal(dat[:-1])
+    values["CHECKSUM_PEDAL"] = checksum
+
+    return packer.make_can_msg("GAS_COMMAND", 2, values)
+
+
+ */
+
   } // namespace can
 } // namespace tareeq
+
