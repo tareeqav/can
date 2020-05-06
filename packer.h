@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #include "common.h"
 
 namespace tareeq {
@@ -8,16 +8,16 @@ namespace tareeq {
 class CANPacker {
 
 public:
-  struct can_pack
+  struct can_message
   {
-      uint32_t          address;
-      uint8_t*          data;
-      uint32_t          bus;
-      uint32_t          size;
+    uint32_t address;
+    uint32_t bus;
+    uint32_t size;
+    uint8_t  data[8];
   };
   
   CANPacker(const std::string& dbc_name);
-  CANPacker::can_pack create_steer_command(double steer_torque_cmd, double steer_request_on, double counter);
+  can_message create_steer_command(double steer_torque_cmd, double steer_request_on, double counter);
 
 private:
   const DBC *dbc = NULL;
@@ -30,7 +30,7 @@ private:
   uint64_t ReverseBytes(uint64_t x);
   uint64_t set_value(uint64_t ret, Signal sig, int64_t ival);
   uint64_t pack(uint32_t address, const std::vector<SignalPackValue> &signals, int counter);
-  can_pack make_can_msg(std::string &name, std::map<std::string, double> &values, int counter);
+  can_message make_can_msg(std::string &name, std::map<std::string, double> &values, int counter);
 };
 
     } // namespace can

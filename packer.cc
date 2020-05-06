@@ -113,18 +113,22 @@ uint64_t CANPacker::pack(uint32_t address, const std::vector<SignalPackValue> &s
   return ret;
 }
 
-CANPacker::can_pack CANPacker::make_can_msg(std::string &name, std::map<std::string, double> &values, int counter)
+CANPacker::can_message CANPacker::make_can_msg(
+  std::string &name,
+  std::map<std::string, double> &values,
+  int counter
+)
 {
-
+  /* message struct to be returned to caller */
+  can_message msg;
   std::vector<SignalPackValue> signals;
 
-  std::map<std::string, double>::iterator it = values.begin();
-  while (it != values.end())
+  for (const auto& kv : values)
   {
     SignalPackValue signal;
 
-    std::string key = it->first;
-    double value = it->second;
+    std::string key = kv.first;
+    double value = kv.second;
     
     signal.name = new char[key.length()+1];
     std::strcpy((char *)signal.name, key.c_str());
@@ -133,10 +137,9 @@ CANPacker::can_pack CANPacker::make_can_msg(std::string &name, std::map<std::str
     //add to list
     signals.push_back(signal);
 
-    it++;
   }
 
-  std::pair<int, int> address_and_size = name_to_address_and_size[name];
+  std::pair<uint32_t, uint32_t> address_and_size = name_to_address_and_size[name];
 
   uint64_t val = pack(address_and_size.first, signals, -1);
   std::cout << "generated value " << val << " and as an array is:" << std::endl;
@@ -149,18 +152,22 @@ CANPacker::can_pack CANPacker::make_can_msg(std::string &name, std::map<std::str
   }
 
   std::cout << std::endl;
-  can_pack msg;
-  msg.data = new uint8_t[address_and_size.second];
   std::memcpy(msg.data, &val, address_and_size.second);
 
   msg.size = address_and_size.second;
-  msg.bus = 0;
+  msg.bus = (uint32_t) 0;
+
+  for (auto signal : signals)
+  {
+    delete signal.name;
+    signal.name = NULL;
+  }
 
   return msg;
 
 }
 
-CANPacker::can_pack CANPacker::create_steer_command(
+CANPacker::can_message CANPacker::create_steer_command(
   double steer_torque_value, 
   double steer_request_on_off,
   double counter
@@ -175,7 +182,7 @@ CANPacker::can_pack CANPacker::create_steer_command(
     {"COUNTER" , counter},
   };
 
-  return make_can_msg(name, values, counter);
+  return make_can_msg(name, values, (int) counter);
 }
 
   } // namespace can
