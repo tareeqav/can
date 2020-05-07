@@ -15,15 +15,7 @@ def clip(x, lo, hi):
     return max(lo, min(hi, x))
 **/
 
-int clip(int x, int lo, int hi)
-{
-    return std::max(lo, std::min(hi, x));
-}
 
-double clip(double x, double lo, double hi)
-{
-    return std::max(lo, std::min(hi, x));
-}
 
     } // namespace can
 } // namespace tareeq

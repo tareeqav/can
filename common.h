@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "dbc.h"
 
@@ -17,7 +17,8 @@ void init_crc_lookup_tables();
 unsigned int pedal_checksum(uint64_t d, int l);
 uint64_t read_u64_be(const uint8_t* v);
 uint64_t read_u64_le(const uint8_t* v);
-
+int clip(int x, int lo, int hi);
+double clip(double x, double lo, double hi);
 
 /** 
 // class MessageState {
@@ -61,16 +62,6 @@ uint64_t read_u64_le(const uint8_t* v);
 
 // };
 
-// // class CANPacker {
-// // private:
-// //   const DBC *dbc = NULL;
-// //   std::map<std::pair<uint32_t, std::string>, Signal> signal_lookup;
-// //   std::map<uint32_t, Msg> message_lookup;
-
-// // public:
-// //   CANPacker(const std::string& dbc_name);
-// //   uint64_t pack(uint32_t address, const std::vector<SignalPackValue> &signals, int counter);
-// // };
 */
 
   } // namespace can

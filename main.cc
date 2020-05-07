@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     for (int i=0; i < 1; i++)
     {
-        msg = toyota.create_accel_command(0, 1, 0, 1);
+        msg = toyota.create_gas_command(0.1, i/2);
     }
     
     std::cout << "returned message data" << std::endl;

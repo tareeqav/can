@@ -7,8 +7,8 @@
 #include <cstdint>
 #include <iostream>
 
-#include "can_base.h"
 #include "packer.h"
+#include "can_base.h"
 #include "can_message.h"
 
 #define WARN printf

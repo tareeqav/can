@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "common.h"
 
 namespace tareeq {
@@ -85,6 +87,18 @@ uint64_t read_u64_le(const uint8_t* v) {
           | ((uint64_t)v[6] << 48)
           | ((uint64_t)v[7] << 56));
 }
+
+int clip(int x, int lo, int hi)
+{
+  return std::max(lo, std::min(hi, x));
+}
+
+double clip(double x, double lo, double hi)
+{
+  return std::max(lo, std::min(hi, x));
+}
+
+
 
   } // namespace can
 } // namespace tareeq
