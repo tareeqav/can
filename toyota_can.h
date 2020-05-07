@@ -29,7 +29,7 @@ class ToyotaCAN
 
 public:
 
-    ToyotaCAN(const CANPacker &packer) : packer_(packer){};
+    ToyotaCAN(std::unique_ptr<CANPacker>&& packer) : packer_(std::move(packer)){};
 
     tareeq::can::can_message create_accel_command(
         double accel_value, 
@@ -50,7 +50,7 @@ public:
             {"CANCEL_REQ", pcm_cancel}
         };
 
-        return packer_.make_can_msg(name, values, -1);
+        return packer_->make_can_msg(name, values, -1);
     };
 
     tareeq::can::can_message create_steer_command(
@@ -67,11 +67,11 @@ public:
             {"COUNTER" , counter},
         };
 
-        return packer_.make_can_msg(name, values, (int) counter);
+        return packer_->make_can_msg(name, values, (int) counter);
     };
 
 private:
-    const CANPacker packer_;
+    std::unique_ptr<CANPacker> packer_;
 
 // /**
 //  * def create_gas_command(packer, gas_amount, idx):

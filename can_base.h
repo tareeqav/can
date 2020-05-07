@@ -5,10 +5,12 @@
 #include <cassert>
 
 #include "dbc.h"
+#include "common.h"
 
-// namespace tareeq {
-//     namespace can {
+namespace tareeq {
+    namespace can {
 
+/**
 // struct can_message
 // {
 //     uint32_t address;
@@ -16,11 +18,8 @@
 //     uint32_t size;
 //     uint8_t  data[8];
 // };
-
+*/
 class CANBase {
-
-// public:
-    // virtual ~CANBase() = 0;
     
 protected:
 

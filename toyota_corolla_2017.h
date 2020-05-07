@@ -1,4 +1,4 @@
-#include "common_dbc.h"
+#include "dbc.h"
 
 namespace tareeq {
   namespace can {

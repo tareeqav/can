@@ -1,8 +1,10 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <vector>
 
+#include "dbc.h"
 #include "can_message.h"
 
 namespace tareeq {
@@ -48,7 +50,7 @@ private:
   ) = 0;
 };
 
-  std::unique_ptr<CANPacker> GetPacker();
+  std::unique_ptr<CANPacker> GetPacker(const std::string& dbc_name);
 
     } // namespace can
 } // namespace tareeq

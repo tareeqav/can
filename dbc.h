@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <string>
 
-#define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
-
 namespace tareeq {
   namespace can {
+
+#define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
 
 struct SignalPackValue {
   const char* name;
@@ -80,10 +80,12 @@ const DBC* dbc_lookup(const std::string& dbc_name);
 
 void dbc_register(const DBC* dbc);
 
+/**
 #define dbc_init(dbc) \
 static void __attribute__((constructor)) do_dbc_init_ ## dbc(void) { \
   dbc_register(&dbc); \
 }
+*/
 
   } // namespace can
 } // namespace tareeq

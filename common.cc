@@ -86,8 +86,5 @@ uint64_t read_u64_le(const uint8_t* v) {
           | ((uint64_t)v[7] << 56));
 }
 
-
-
-  }
-}
-
+  } // namespace can
+} // namespace tareeq
