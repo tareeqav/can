@@ -18,7 +18,6 @@ namespace tareeq {
 
 class CANPackerImpl : public CANPacker, public CANBase
 {
-
   public:
 
     CANPackerImpl(const std::string& dbc_name) : CANBase(dbc_name){};
@@ -154,72 +153,6 @@ class CANPackerImpl : public CANPacker, public CANBase
         return msg;
     }
 };
-
-// CANPacker::CANPacker(const std::string& dbc_name) {
-  // dbc = dbc_lookup(dbc_name);
-  // assert(dbc);
-  // for (int i=0; i<dbc->num_msgs; i++) {
-  //   const Msg* msg = &dbc->msgs[i];
-  //   message_lookup[msg->address] = *msg;
-  //   for (int j=0; j<msg->num_sigs; j++) {
-  //     const Signal* sig = &msg->sigs[j];
-  //     signal_lookup[std::make_pair(msg->address, std::string(sig->name))] = *sig;
-  //   }
-  // }
-  // init_crc_lookup_tables();
-
-  // size_t num_msgs = dbc[0].num_msgs;
-  // for (size_t i=0; i < num_msgs; i++)
-  // {
-  //   Msg msg = dbc[0].msgs[i];
-  //   name_to_address_and_size[msg.name] = std::make_pair(msg.address, msg.size);
-  //   address_to_size[msg.address] = msg.size;
-  // }
-
-// }
-
-
-/**
-def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead):
-  # TODO: find the exact canceling bit that does not create a chime
-  values = {
-    "ACCEL_CMD": accel,
-    "SET_ME_X01": 1,
-    "DISTANCE": 0,
-    "MINI_CAR": lead,
-    "SET_ME_X3": 3,
-    "SET_ME_1": 1,
-    "RELEASE_STANDSTILL": not standstill_req,
-    "CANCEL_REQ": pcm_cancel,
-  }
-  return packer.make_can_msg("ACC_CONTROL", 2, values)
-
-*/
-
-
-/**
- * def create_gas_command(packer, gas_amount, idx):
-    # Common gas pedal msg generator
-    enable = gas_amount > 0.001
-
-    values = {
-        "ENABLE": enable,
-        "COUNTER_PEDAL": idx & 0xF,
-    }
-
-    if enable:
-        values["GAS_COMMAND"] = gas_amount * 255.
-        values["GAS_COMMAND2"] = gas_amount * 255.
-
-    dat = packer.make_can_msg("GAS_COMMAND", 2, values)[2]
-
-    checksum = crc8_pedal(dat[:-1])
-    values["CHECKSUM_PEDAL"] = checksum
-
-    return packer.make_can_msg("GAS_COMMAND", 2, values)
-
-
- */
 
   } // namespace can
 } // namespace tareeq

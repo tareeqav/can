@@ -10,23 +10,6 @@ namespace tareeq {
 
 class ToyotaCAN
 {
-    // /**
-// def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead):
-//   # TODO: find the exact canceling bit that does not create a chime
-//   values = {
-//     "ACCEL_CMD": accel,
-//     "SET_ME_X01": 1,
-//     "DISTANCE": 0,
-//     "MINI_CAR": lead,
-//     "SET_ME_X3": 3,
-//     "SET_ME_1": 1,
-//     "RELEASE_STANDSTILL": not standstill_req,
-//     "CANCEL_REQ": pcm_cancel,
-//   }
-//   return packer.make_can_msg("ACC_CONTROL", 2, values)
-
-// */
-
 public:
 
     ToyotaCAN(std::unique_ptr<CANPacker>&& packer) : packer_(std::move(packer)){};
@@ -72,28 +55,6 @@ public:
 
 private:
     std::unique_ptr<CANPacker> packer_;
-
-// /**
-//  * def create_gas_command(packer, gas_amount, idx):
-//     # Common gas pedal msg generator
-//     enable = gas_amount > 0.001
-
-//     values = {
-//         "ENABLE": enable,
-//         "COUNTER_PEDAL": idx & 0xF,
-//     }
-
-//     if enable:
-//         values["GAS_COMMAND"] = gas_amount * 255.
-//         values["GAS_COMMAND2"] = gas_amount * 255.
-
-//     dat = packer.make_can_msg("GAS_COMMAND", 2, values)[2]
-
-//     checksum = crc8_pedal(dat[:-1])
-//     values["CHECKSUM_PEDAL"] = checksum
-
-//     return packer.make_can_msg("GAS_COMMAND", 2, values)
-
 
 };
 
