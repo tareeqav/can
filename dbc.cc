@@ -1,6 +1,6 @@
 #include <vector>
-#include <iostream>
-#include "common_dbc.h"
+
+#include "dbc.h"
 
 namespace tareeq {
   namespace can {
@@ -23,12 +23,12 @@ void dbc_register(const DBC* dbc) {
   get_dbcs().push_back(dbc);
 }
 
-// extern "C" {
+extern "C" {
   const DBC* dbc_lookup(const char* dbc_name) {
     return dbc_lookup(std::string(dbc_name));
   }
-// }
-
-  }
 }
+
+  } // namespace can
+} // namespace tareeq
 
