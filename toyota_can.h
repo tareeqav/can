@@ -16,8 +16,11 @@ namespace tareeq {
 class ToyotaCAN
 {
 private:
-    
+    double accel_ = 0.01;
+    double previous_accel_ = 0.0;
+    double steering_command_ = 0;
     std::unique_ptr<CANPacker> packer_;
+
 
     class Limits {
         public:
@@ -25,6 +28,11 @@ private:
             const double_t STEER_DELTA_UP   = 10;      // 1.5s time to peak torque
             const double_t STEER_DELTA_DOWN = 25;      // always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
             const double_t STEER_ERROR_MAX  = 350;     // max delta between torque cmd and torque motor
+            // Accel limits
+            const double ACCEL_HYST_GAP = 0.02;  // don't change accel command for small oscilalitons within this value
+            const double ACCEL_MAX = 1.5;  // 1.5 m/s2
+            const double ACCEL_MIN = -3.0; // 3   m/s2
+            const double ACCEL_SCALE = std::max(ACCEL_MAX, -ACCEL_MIN);
     };
 
     const Limits LIMITS;
@@ -55,10 +63,10 @@ public:
         return packer_->make_can_msg(name, values, -1);
     };
 
-    can_message create_steer_command(
+    can_message create_steering_command(
         double steer_torque_value, 
         double steer_request_on_off,
-        double counter)
+        uint32_t counter)
     {
         std::string name("STEERING_LKA");
 
@@ -91,7 +99,7 @@ public:
         return crc;
     }
 
-    can_message create_gas_command(double gas_amount, uint8_t idx)
+    can_message create_gas_command(double gas_amount, uint32_t counter)
     {
         std::string name("GAS_COMMAND");
 
@@ -100,7 +108,7 @@ public:
         
         std::map<std::string, double> values = {
             {"ENABLE" , enable},
-            {"COUNTER_PEDAL" , idx & 0xF}
+            {"COUNTER_PEDAL" , counter & 0xF}
         };
 
         if (enable)
@@ -116,11 +124,11 @@ public:
         return packer_->make_can_msg(name, values, -1);
     }
 
-   int32_t apply_steer_torque_limits(
+    int32_t apply_steering_torque_limits(
        double apply_torque,
        double apply_torque_last,
        double motor_torque)
-   {
+    {
         double max_lim = std::min(std::max(motor_torque + LIMITS.STEER_ERROR_MAX, LIMITS.STEER_ERROR_MAX), LIMITS.STEER_MAX);
         double min_lim = std::max(std::min(motor_torque - LIMITS.STEER_ERROR_MAX, -LIMITS.STEER_ERROR_MAX), -LIMITS.STEER_MAX);
 
@@ -140,8 +148,46 @@ public:
         }
 
         return int(std::round(float(apply_torque)));
-   }    
+    };
 
+    inline void accel_hysteresis(double &accel, double &accel_steady)
+    {
+        if (accel > accel_steady + LIMITS.ACCEL_HYST_GAP)
+            { accel = accel - LIMITS.ACCEL_HYST_GAP;}
+        else if (accel < accel_steady - LIMITS.ACCEL_HYST_GAP)
+            {accel = accel + LIMITS.ACCEL_HYST_GAP;}
+    }
+
+    can_message apply_accel_command(uint32_t counter)
+    {
+        double accel_steady = 0.0;
+        accel_hysteresis(accel_, accel_steady);
+        accel_ = clip(accel_ * LIMITS.ACCEL_SCALE, LIMITS.ACCEL_MIN, LIMITS.ACCEL_MAX);
+
+        return create_accel_command(
+            accel_,
+            1, // TO-DO: create a variable for this
+            0, // TO-DO: create a variable for this
+            1 // TO-DO: create a variable for this
+        );
+    };
+
+    can_message apply_steering_command(uint32_t counter)
+    {
+        int32_t new_steering_command = int(std::round(steering_command_+1.0) * LIMITS.STEER_MAX);
+        steering_command_ = apply_steering_torque_limits(
+            new_steering_command,
+            steering_command_,
+            0 // TO-DO: create a variable for this
+        );
+        if (steering_command_ == LIMITS.STEER_MAX && counter % 200 == 0)
+        {
+            steering_command_ = 0;
+        }
+
+        return create_steering_command(steering_command_, 1, counter);
+    }
+    
 };
 
   } // namespace can
