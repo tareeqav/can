@@ -35,10 +35,10 @@ protected:
     CANBase(const std::string& dbc_name) {
         dbc = dbc_lookup(dbc_name);
         assert(dbc);
-        for (int i=0; i<dbc->num_msgs; i++) {
+        for (size_t i=0; i<dbc->num_msgs; i++) {
             const Msg* msg = &dbc->msgs[i];
             message_lookup[msg->address] = *msg;
-            for (int j=0; j<msg->num_sigs; j++) {
+            for (size_t j=0; j<msg->num_sigs; j++) {
             const Signal* sig = &msg->sigs[j];
             signal_lookup[std::make_pair(msg->address, std::string(sig->name))] = *sig;
             }

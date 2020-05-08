@@ -7,7 +7,7 @@ struct can_message
 {
     uint32_t address;
     uint32_t bus;
-    uint32_t size;
+    size_t size;
     uint8_t  data[8];
 };
 

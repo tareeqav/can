@@ -134,7 +134,7 @@ class CANPackerImpl : public CANPacker, public CANBase
 
         std::cout << std::hex;
         std::cout << "reversed bytes value " << val << " and as an array is:" << std::endl;
-        for (int i=0; i < address_and_size.second; i++) {
+        for (size_t i=0; i < address_and_size.second; i++) {
             std::cout << +(*(((uint8_t*)&val)+i)) << " " ;
         }
 

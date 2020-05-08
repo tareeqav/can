@@ -18,13 +18,13 @@ int main(int argc, char** argv)
     tareeq::can::ToyotaCAN toyota(std::move(packer));
     tareeq::can::can_message msg;
 
-    for (int i=0; i < 1; i++)
+    for (size_t i=0; i < 1; i++)
     {
         msg = toyota.create_gas_command(0.1, i/2);
     }
     
     std::cout << "returned message data" << std::endl;
-    for (int i=0; i < msg.size; i++)
+    for (size_t i=0; i < msg.size; i++)
     {
         std::cout << +msg.data[i] << " ";
     }

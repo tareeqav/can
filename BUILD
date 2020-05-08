@@ -1,9 +1,8 @@
 cc_library(
     name = "can",
-    srcs = glob(["*.cc"])+[
-        "common_dbc.h",
-        "common.h"
-    ],	
+    srcs = glob(
+        ["*.cc"])+glob(
+        ["*.h"]),	
     #hdrs = glob([
     #    "pwm.h",
     #    "output.h",
