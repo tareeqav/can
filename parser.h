@@ -1,12 +1,15 @@
-/**
- * 
+ 
 #pragma once
 
 #include <map>
+#include <memory>
 #include <vector>
 
-#include "tareeq/can/dbc.h"
+#include "dbc.h"
+#include "can_message.h"
 
+/**
+ *
 class MessageState {
 public:
   uint32_t address;
@@ -25,27 +28,20 @@ public:
   bool parse(uint64_t sec, uint16_t ts_, uint8_t * dat);
   bool update_counter_generic(int64_t v, int cnt_size);
 };
+*/
 
-class CANParser {
-private:
-  const int bus;
-
-  const DBC *dbc = NULL;
-  std::map<uint32_t, MessageState> message_states;
-
-public:
-  bool can_valid = false;
-  uint64_t last_sec = 0;
-
-  CANParser(int abus, const std::string& dbc_name,
-            const std::vector<MessageParseOptions> &options,
-            const std::vector<SignalParseOptions> &sigoptions);
+namespace tareeq {
+  namespace can {
   
-  // void UpdateCans(uint64_t sec, const capnp::List<cereal::CanData>::Reader& cans);
-  void UpdateValid(uint64_t sec);
-  void update_string(std::string data, bool sendcan);
-  std::vector<SignalValue> query_latest();
+class CANParser
+{
+  public:
+    virtual ~CANParser() = default;
+    virtual std::map<std::string, double> parse(can_message msg) = 0;
 
 };
 
-*/
+  std::unique_ptr<CANParser> GetParser(const std::string& dbc_name);
+
+  } // namespace can
+} // namespace tareeq

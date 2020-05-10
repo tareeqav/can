@@ -22,9 +22,10 @@ namespace tareeq {
 class CANPackerImpl : public CANPacker, public CANBase
 {
   public:
-
     CANPackerImpl(const std::string& dbc_name) : CANBase(dbc_name){};
 
+  private:
+    
     /**
      * 
     */
@@ -60,8 +61,6 @@ class CANPackerImpl : public CANPacker, public CANBase
 
         return ret;
     };
-
-  private:
 
     /**
      * 
@@ -160,6 +159,7 @@ class CANPackerImpl : public CANPacker, public CANBase
         std::cout << std::endl;
         std::memcpy(msg.data, &val, address_and_size.second);
 
+        msg.address = address_and_size.first;
         msg.size = address_and_size.second;
         msg.bus = (uint32_t) 0;
 
