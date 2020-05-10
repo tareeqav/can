@@ -11,6 +11,9 @@
 #include "can_base.h"
 #include "can_message.h"
 
+#include <bitset>
+
+
 #define WARN printf
 
 namespace tareeq {
@@ -34,13 +37,27 @@ class CANPackerImpl : public CANPacker, public CANBase
         uint64_t mask = ((1ULL << sig.b2)-1) << shift;
         uint64_t dat = (ival & ((1ULL << sig.b2)-1)) << shift;
 
+        // std::bitset<64> bmask(mask);
+        // std::bitset<64> bdat(dat);
+        // std::cout << "int value was " << ival << std::endl;
+        // std::cout << "mask has binary " << bmask << std::endl;
+        // std::cout << "dat  has binary " << bdat << std::endl;
+        
         if (sig.is_little_endian) {
             dat = ReverseBytes(dat);
             mask = ReverseBytes(mask);
         }
 
         ret &= ~mask;
+
+        // std::bitset<64> ret1(ret);
+        // std::cout << "ret1 has binary" << ret1 << std::endl;
+
         ret |= dat;
+
+        // std::bitset<64> ret2(ret);
+        // std::cout << "ret2 has binary" << ret2 << std::endl;
+
         return ret;
     };
 
@@ -73,7 +90,9 @@ class CANPackerImpl : public CANPacker, public CANBase
             ival = (1ULL << sig.b2) + ival;
             }
 
+            std::cout << "processing " << name << std::endl;
             ret = set_value(ret, sig, ival);
+            std::cout << std::endl << std::endl;
         }
 
         if (counter >= 0){
